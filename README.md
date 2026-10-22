@@ -1,5 +1,7 @@
 # QIDI Box Display Fix for Fluidd (QIDI X-Max 4, firmware 01.01.07.01)
 
+**Current version: `0.9.0` (pre-release, still being tested).** Always download the file from the newest [release](../../releases/latest). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
+
 > [!WARNING]
 > **Use at your own risk. No warranty of any kind.**
 >
@@ -76,12 +78,14 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 > [!NOTE]
 > These limitations reflect the current state of testing. The author continues to test, and this summary and the patched file will be updated accordingly. If a newer version is published, the checksums below will change as well.
 
-### File checksums (SHA-256)
+### Versions and file checksums (SHA-256)
+
+The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). It is written in the first line of the file and available as `window.__qidiBoxPatch` in the browser console. The file name cannot be changed, because Fluidd loads it by that name.
 
 | File | SHA-256 |
 |---|---|
 | Original `index-DlFvHGAh.js` (QIDI_MAX4 repo, Fluidd v1.30.5) | `178b2e076d3a75716819ee13f9ea1f0c92e536546c8b2adafde8632f6723710c` |
-| Patched `index-DlFvHGAh.js` (this repo, `patched/`) | `2b17262f0bd37c2e18f06b1af61f75b8d78f0ca7cbc25543260ef7e5d1f253b0` |
+| Patched `index-DlFvHGAh.js` | See `patched/SHA256SUMS` and the notes of the matching [release](../../releases) |
 
 ---
 
@@ -101,9 +105,10 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 
 ### Step 1: Download the patched file
 
-1. Open the `patched` folder of this repository.
-2. Download **`index-DlFvHGAh.js`**. Keep the file name exactly as it is.
+1. Open the [latest release](../../releases/latest) of this repository.
+2. Under **Assets**, download **`index-DlFvHGAh.js`**. Keep the file name exactly as it is. (Optionally also download `SHA256SUMS` for step 8.)
 3. Save it somewhere easy to find, for example your Desktop.
+4. Note the **version number** of the release (for example `0.9.0`).
 
 ### Step 2: Install a file transfer program
 
@@ -187,7 +192,7 @@ In the printer terminal:
 sha256sum /home/qidi/fluidd/assets/index-DlFvHGAh.js
 ```
 
-The result should start with **`2b17262f0bd37c2e`**. If not, upload again.
+Compare the result with the checksum in the `SHA256SUMS` file of the release (or in the release notes). It must be identical. If not, upload again.
 
 ### Step 9: Clear your browser cache
 
@@ -204,9 +209,23 @@ You do **not** need to restart the printer.
 1. Open the **QIDI Box** card in Fluidd.
 2. Slots that hold filament should now show the correct **color**, **material**, and **vendor**.
 3. A slot that the printer does not detect (for example because the filament is not pushed in far enough) is shown as empty (`?`). That is the printer's own status and not caused by the patch.
+4. To see which patch version is installed, run this on the printer (use your own path from step 4):
+
+   ```bash
+   head -n 1 /home/qidi/fluidd/assets/index-DlFvHGAh.js
+   ```
+
+   It should print something like `/* QIDI Box patch for Fluidd v1.30.5 - patch version 0.9.0 */`. Alternatively, press **F12** in the browser, open the **Console**, and enter `window.__qidiBoxPatch`.
 
 > [!NOTE]
 > Please test **Load** and **Unload** only when the printer is idle, and be ready to stop it. These buttons may not work properly on firmware 01.01.07.01 (see [known limitations](#known-limitations)).
+
+### How do I know if there is a newer version?
+
+1. Check your installed version (step 10, point 4).
+2. Open the [latest release](../../releases/latest) and compare its version number.
+3. If the release has a **higher** number, repeat steps 1-9 with the new file. Your backup from step 6 can be replaced by a new one.
+4. Read the [CHANGELOG](CHANGELOG.md) to see what is new. Versions below `1.0.0` are pre-releases.
 
 ### How to undo the patch
 
@@ -247,9 +266,11 @@ When reporting an issue, please include your firmware version, the output of `ca
 Requirements: Python 3. No extra packages.
 
 ```bash
-python patch_qidi_box.py <original index.js> <output index.js> \
+python patch_qidi_box.py --version 0.9.0 <original index.js> <output index.js> \
     filament-0.2.json filament-0.4.json filament-0.6.json filament-0.8.json
 ```
+
+`--version` sets the patch version (`MAJOR.MINOR.PATCH`). It is written into the first lines of the output, and a `SHA256SUMS` file is created next to the output.
 
 - The JSON files come from `/home/qidi/QIDI_Client/resource/filament_config/` on the printer (copy them with SFTP). The nozzle size is read from the file name (`filament-<nozzle>.json`).
 - The script asserts that every replacement matches the original **exactly the expected number of times**. If a different Fluidd build changes the minified code, it aborts instead of writing a broken file.
