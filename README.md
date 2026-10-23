@@ -78,6 +78,8 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 | RFID re-read button (`READ_RFID`) | Reported working |
 | Firmware picks up color/material changes made in Fluidd | Reported working (printer display shows the new values immediately) |
 | Print-start slot mapping dialog | **Not tested** end-to-end |
+| Spoolman integration (with the box card and the print start) | **Not tested** (the author will test this separately) |
+| Starting a print from Fluidd (`.3mf` file) | **Fails in the author's environment** with a firmware error (see known limitations). Not yet checked whether plain `.gcode` files work. Cause under investigation. |
 | "Box Settings" switches (auto reload, RFID on insert, RFID on startup) | Reported working, in sync with the printer display settings |
 
 > [!NOTE]
@@ -86,7 +88,7 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 ### Known limitations
 
 - **Spoolman may skip the slot-mapping dialog (unconfirmed, based on reading the Fluidd code):** if Spoolman is connected and *Show spool selection dialog on print start* is enabled (the Fluidd default), Fluidd shows only the Spoolman dialog and starts the print directly. According to the code, the box slot-mapping dialog is then skipped, and the previously saved mapping (`value_t0`, `value_t1`, …) is used. This has **not been confirmed on a printer yet**. If it happens, it is original Fluidd behavior and not caused by the patch. After starting a print, check `value_t0` (and `value_t1`, …) with the Moonraker query `/printer/objects/query?save_variables`. Workaround: switch that option off in the Fluidd settings (Spoolman), or set the mapping by hand in the console, e.g. `SAVE_VARIABLE VARIABLE=value_t0 VALUE="'slot3'"`.
-- **Starting `.3mf` files from Fluidd fails (under investigation):** on firmware 01.01.07.01 the print start can fail with `3MF processing error: [Errno 2] No such file or directory: '/home/qidi/printer_data/.temp/shadow_native_plate_1.gcode'`. The error is raised by the firmware's Klipper (`virtual_sdcard`), not by Fluidd or this patch, and it is **not fixed** by the patch. Workaround: start the print from the printer display, or export a plain `.gcode` file from the slicer.
+- **Starting `.3mf` files from Fluidd fails (observed in the author's environment, under investigation):** on firmware 01.01.07.01 the print start fails with `3MF processing error: [Errno 2] No such file or directory: '/home/qidi/printer_data/.temp/shadow_native_plate_1.gcode'`. The error is raised by the firmware's Klipper (`virtual_sdcard`), not by Fluidd or this patch, and it is **not fixed** by the patch. Workaround: start the print from the printer display, or export a plain `.gcode` file from the slicer.
 - **Other states:** `box_extras.box_button_state` (used to disable the buttons while the box is busy) is not reported by the firmware, so the buttons are not disabled while an operation is running. Do not click repeatedly.
 - **Vendor list:** `vendor_slotN` is still an integer index (`0 = Generic`, `1 = QIDI`). Third-party vendors may be labeled incorrectly in the vendor dropdown. The card display prefers `vendor_str` from the firmware.
 - **Static list:** the filament list is embedded. If QIDI adds new IDs, rebuild the patch (see [section 4](#4-for-advanced-users-rebuilding-the-patch)). Unknown IDs still display via the firmware fallback, but will be missing from the material dropdown.
