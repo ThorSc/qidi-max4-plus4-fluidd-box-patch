@@ -13,6 +13,36 @@ Every release lists its SHA-256 checksum in the release notes and in `patched/SH
 
 ---
 
+## [0.9.1] - Pre-release
+
+Makes the box card buttons work again on firmware **01.01.07.01**. Update from 0.9.0 by replacing `index-DlFvHGAh.js` again (see the README).
+
+### Fixed
+
+- **Load, Unload, Uninstall:** the firmware renamed the commands. The buttons now send `LOAD_FILAMENT_CONTROL SLOT=<n>`, `UNLOAD_FILAMENT_CONTROL SLOT=<n>`, and `EJECT_FILAMENT_CONTROL SLOT=<n>` (as the printer display does). The old `E_LOAD`, `E_UNLOAD`, and `E_BOX` are still accepted by the firmware but do nothing.
+- **RFID re-read button:** now sends `READ_RFID SLOT=<n>` (was `RFID_READ SLOT=slot<n>`).
+- **Unload was always disabled:** the firmware no longer reports `box_extras.b_endstop_state`. The loaded slot is now taken from `box_extras.loaded_slot` (old rule kept as a fallback).
+
+### Tested
+
+- Load, Unload, and Uninstall from the Fluidd box card: reported working and in sync with the printer display (one X-Max 4).
+- RFID re-read button in the Fluidd box card: reported working.
+- "Box Settings" switches (auto reload, RFID on insert, RFID on startup): reported working and in sync with the printer display settings (unchanged code, still writes the `auto_*` variables).
+- Writing color and material from the box card: values are saved in the same format the firmware uses, and the printer display shows the new values immediately.
+
+### Not tested yet
+
+- Print-start slot mapping dialog.
+
+### Known issues
+
+- `box_button_state` is not reported by the firmware, so the buttons are not disabled while an operation is running.
+- If Spoolman is connected and *Show spool selection dialog on print start* is on, Fluidd skips the box slot-mapping dialog (original Fluidd behavior). See the README for workarounds.
+- Starting a `.3mf` file from Fluidd can fail on firmware 01.01.07.01 with `3MF processing error: [Errno 2] No such file or directory: '/home/qidi/printer_data/.temp/shadow_native_plate_1.gcode'`. The error comes from the firmware, not from this patch, and is not fixed here (under investigation). Workaround: start from the printer display or export plain `.gcode`.
+- Testing is ongoing. This changelog and the patched file will be updated as results come in.
+
+---
+
 ## [0.9.0] - Pre-release
 
 First published version. Targets **Fluidd v1.30.5** (`assets/index-DlFvHGAh.js`) as shipped with QIDI X-Max 4 firmware **01.01.07.01**.

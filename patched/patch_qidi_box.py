@@ -34,6 +34,7 @@ helper = (
  '/* QIDI Box patch for Fluidd v1.30.5 - patch version ' + version + ' */\n'
  'window.__qidiBoxPatch="' + version + '";\n'
  'const qbxColor=(v,d)=>{if(Array.isArray(v))v=v[0];if(v==null||v==="")return"#00000000";const x=String(v).trim().replace(/[\'"#]/g,"");if(/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(x))return"#"+x.slice(0,6).toUpperCase();return(d&&d[x])||"#00000000"};\n'
+ 'const qbxIsLoaded=c=>{const e=c.$store.state.printer.printer.box_extras;if(!e)return!1;if(e.b_endstop_state!==void 0)return e.b_endstop_state===0&&c.variables.lastLoadSlot===c.selectIndex;return e.loaded_slot==="slot"+c.selectIndex};\n'
  'const qbxFil=' + json.dumps(qfd, separators=(",", ":"), ensure_ascii=False) + ';\n'
  'const qbxFilMerge=(d,c)=>{if(!d)return d;for(const k of Object.keys(d))/^fila\\d+$/.test(k)&&delete d[k];let n;try{n=Number(c.$store.state.printer.printer.configfile.settings.extruder.nozzle_diameter).toFixed(1)}catch(e){}const l=qbxFil[n]||qbxFil["0.4"]||Object.assign({},...Object.values(qbxFil));for(const i in l)d["fila"+i]={filament:l[i][0],type:l[i][1],vendor:l[i][2]};return d};\n'
 )
@@ -61,6 +62,18 @@ edits = [
   'set selectedColor(t){const s=String(t||"").replace("#","").toUpperCase();/^[0-9A-F]{6}$/.test(s)&&I.printerGcodeScript(`SAVE_VARIABLE VARIABLE=color_slot${this.selectIndex} VALUE="[\'${s}\']"`)', 1),
  ('(this.selectIndex===16?I.printerGcodeScript(`SAVE_VARIABLE VARIABLE=filament_slot16 VALUE="${s.replace("fila","")}"`):I.printerGcodeScript(`SAVE_VARIABLE VARIABLE=filament_slot${this.selectIndex} VALUE="${s.replace("fila","")}"`))',
   'I.printerGcodeScript(`SAVE_VARIABLE VARIABLE=filament_slot${this.selectIndex} VALUE="\'${s.replace("fila","")}\'"`)', 1),
+ # Load/Unload enablement: firmware 01.01.07.01 no longer reports box_extras.b_endstop_state,
+ # but reports box_extras.loaded_slot. Use the old condition when the endstop is present.
+ ('this.$store.state.printer.printer.box_extras.b_endstop_state===0&&this.variables.lastLoadSlot===this.selectIndex',
+  'qbxIsLoaded(this)', 2),
+ # Uninstall/Load/Unload buttons: the display of firmware 01.01.07.01 sends
+ # EJECT_FILAMENT_CONTROL SLOT=<n>, LOAD_FILAMENT_CONTROL SLOT=<n> and UNLOAD_FILAMENT_CONTROL SLOT=<n>.
+ # E_BOX/E_LOAD/E_UNLOAD are still accepted but no longer do anything.
+ ('const n=["E_BOX","E_LOAD","E_UNLOAD"];I.printerGcodeScript(`${n[t-1]} slot=${s}`)',
+  'const n=["EJECT_FILAMENT_CONTROL","LOAD_FILAMENT_CONTROL","UNLOAD_FILAMENT_CONTROL"];I.printerGcodeScript(`${n[t-1]} SLOT=${s}`)', 1),
+ # Firmware 01.01.07.01 renamed the RFID command and expects a numeric slot:
+ # RFID_READ SLOT=slot2 -> READ_RFID SLOT=2
+ ('I.printerGcodeScript(`RFID_READ SLOT=slot${t}`)', 'I.printerGcodeScript(`READ_RFID SLOT=${t}`)', 1),
 ]
 for a, b, n in edits:
     assert s.count(a) == n, (s.count(a), a[:70])

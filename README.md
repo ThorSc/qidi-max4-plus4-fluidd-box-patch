@@ -1,6 +1,6 @@
 # QIDI Box Display Fix for Fluidd (QIDI X-Max 4, firmware 01.01.07.01)
 
-**Current version: `0.9.0` (pre-release, still being tested).** Always download the file from the newest [release](../../releases/latest). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
+**Current version: `0.9.1` (pre-release, still being tested).** Always download the file from the newest [release](../../releases/latest). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
 
 > [!WARNING]
 > **Use at your own risk. No warranty of any kind.**
@@ -27,7 +27,7 @@
 
 ### Symptom
 
-After updating the QIDI X-Max 4 to firmware **01.01.07.01**, the QIDI Box card in the Fluidd web interface no longer shows the correct filament information. Colors are missing (transparent), material and vendor are empty or shown as `?`, and the print-start dialog that maps slicer extruders to box slots can fail.
+After updating the QIDI X-Max 4 to firmware **01.01.07.01**, the QIDI Box card in the Fluidd web interface no longer shows the correct filament information. Colors are missing (transparent), material and vendor are empty or shown as `?`, and the print-start dialog that maps slicer extruders to box slots can fail. In addition, the **Load**, **Unload**, **Uninstall**, and **RFID re-read** buttons in the box card do nothing, and **Unload** is always disabled.
 
 ### Root cause
 
@@ -41,6 +41,17 @@ The new firmware changed the format of the per-slot values stored in `save_varia
 
 Fluidd runs `parseInt()` on these values, so `['228332']` becomes the number `228332` (no match in `colordict`) and `'QFG00'` becomes `NaN` (no match in the filament list). The new IDs (`QFxxx`) are not present in `officiall_filas_list.cfg`, which still only contains `[fila1]…[fila50]`. Their definitions are shipped in `/home/qidi/QIDI_Client/resource/filament_config/filament-<nozzle>.json`, which is outside every Moonraker file root and therefore not reachable from Fluidd.
 
+The firmware also **renamed the G-code commands** that the box card sends. The old commands are still accepted by Klipper but silently do nothing. The commands below were read from the printer display with the Moonraker console history (`/server/gcode_store`):
+
+| Box card button | Fluidd sends (old) | Firmware 01.01.07.01 (display) |
+|---|---|---|
+| RFID re-read | `RFID_READ SLOT=slot2` | `READ_RFID SLOT=2` |
+| Load | `E_LOAD slot=2` | `LOAD_FILAMENT_CONTROL SLOT=2` |
+| Unload | `E_UNLOAD slot=2` | `UNLOAD_FILAMENT_CONTROL SLOT=2` |
+| Uninstall | `E_BOX slot=2` | `EJECT_FILAMENT_CONTROL SLOT=2` |
+
+Finally, `box_extras.b_endstop_state`, `e_endstop_state`, and `box_button_state` are **no longer reported**. Fluidd used `b_endstop_state` together with `last_load_slot` to decide which slot is loaded, so Unload was never enabled. The firmware now reports the loaded slot as `box_extras.loaded_slot` (e.g. `slot2`; `slot16` means the external spool position).
+
 ### What the patch changes
 
 The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
@@ -50,6 +61,8 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 - **Fallback to firmware data:** if an ID is not in the embedded list, name, color, and vendor are taken from `box_extras.boxes[].filament_info[]`, which the firmware reports itself. The vendor is always taken from `vendor_str` when available.
 - **Print-start dialog:** an unknown filament ID no longer throws (`?.type`).
 - **Write-back:** changing color or material in the box card now writes `color_slotN` as `['RRGGBB']` and `filament_slotN` as `'ID'`.
+- **Button commands:** Load, Unload, Uninstall, and the RFID re-read button send the new commands (table above), with the slot as a number.
+- **Loaded slot / button enablement:** a slot counts as loaded when `box_extras.loaded_slot` equals that slot. If the firmware still reports `b_endstop_state`, the old rule is used. So Load is disabled and Unload enabled for the loaded slot, and the reverse for all other occupied slots.
 
 ### Test status
 
@@ -59,16 +72,22 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 | Nozzle-based list selection logic (0.2 / 0.4 / 0.6 / 0.8 / unknown) | Verified (isolated test) |
 | Color and material display for occupied slots on a real X-Max 4 | Reported working by one user (slots 0, 2, 3 correct) |
 | Slot not detected by the printer (`runout_button = 1`) | Displayed as empty, which matches the printer state (expected, not a bug) |
-| Writing color/material from the box card (`SAVE_VARIABLE` format) | **Not tested** |
+| Writing color/material from the box card (`SAVE_VARIABLE` format) | Reported working (values saved in the same format as the firmware writes them) |
+| Load / Unload / Uninstall buttons | Reported working and in sync with the printer display |
+| Button enablement based on `loaded_slot` | Reported working (Load and Unload enabled as expected) |
+| RFID re-read button (`READ_RFID`) | Reported working |
+| Firmware picks up color/material changes made in Fluidd | Reported working (printer display shows the new values immediately) |
 | Print-start slot mapping dialog | **Not tested** end-to-end |
-| Load / Unload buttons | **Not tested, likely affected** (see below) |
+| "Box Settings" switches (auto reload, RFID on insert, RFID on startup) | Reported working, in sync with the printer display settings |
 
 > [!NOTE]
 > **Testing is ongoing.** The items marked "Not tested" are still being tested by the author. This summary and the patched file will be updated as soon as there are results. Please check back for newer versions before you apply the patch.
 
 ### Known limitations
 
-- **Load / Unload buttons:** Fluidd enables them based on `box_extras.b_endstop_state`, `e_endstop_state`, and `box_button_state`. These fields are **absent** in the status reported by firmware 01.01.07.01, so the buttons may stay disabled or behave incorrectly. This patch does not address that.
+- **Spoolman skips the slot-mapping dialog:** if Spoolman is connected and *Show spool selection dialog on print start* is enabled (the Fluidd default), Fluidd shows only the Spoolman dialog and starts the print directly. The box slot-mapping dialog is skipped, and the previously saved mapping (`value_t0`, `value_t1`, …) is used. This is original Fluidd behavior, not caused by the patch. Workaround: switch that option off in the Fluidd settings (Spoolman), or set the mapping by hand in the console, e.g. `SAVE_VARIABLE VARIABLE=value_t0 VALUE="'slot3'"`.
+- **Starting `.3mf` files from Fluidd fails (under investigation):** on firmware 01.01.07.01 the print start can fail with `3MF processing error: [Errno 2] No such file or directory: '/home/qidi/printer_data/.temp/shadow_native_plate_1.gcode'`. The error is raised by the firmware's Klipper (`virtual_sdcard`), not by Fluidd or this patch, and it is **not fixed** by the patch. Workaround: start the print from the printer display, or export a plain `.gcode` file from the slicer.
+- **Other states:** `box_extras.box_button_state` (used to disable the buttons while the box is busy) is not reported by the firmware, so the buttons are not disabled while an operation is running. Do not click repeatedly.
 - **Vendor list:** `vendor_slotN` is still an integer index (`0 = Generic`, `1 = QIDI`). Third-party vendors may be labeled incorrectly in the vendor dropdown. The card display prefers `vendor_str` from the firmware.
 - **Static list:** the filament list is embedded. If QIDI adds new IDs, rebuild the patch (see [section 4](#4-for-advanced-users-rebuilding-the-patch)). Unknown IDs still display via the firmware fallback, but will be missing from the material dropdown.
 - **Nozzle selection** relies on `nozzle_diameter` in `printer.cfg` matching the installed nozzle.
@@ -108,7 +127,7 @@ The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). I
 1. Open the [latest release](../../releases/latest) of this repository.
 2. Under **Assets**, download **`index-DlFvHGAh.js`**. Keep the file name exactly as it is. (Optionally also download `SHA256SUMS` for step 8.)
 3. Save it somewhere easy to find, for example your Desktop.
-4. Note the **version number** of the release (for example `0.9.0`).
+4. Note the **version number** of the release (for example `0.9.1`).
 
 ### Step 2: Install a file transfer program
 
@@ -215,10 +234,10 @@ You do **not** need to restart the printer.
    head -n 1 /home/qidi/fluidd/assets/index-DlFvHGAh.js
    ```
 
-   It should print something like `/* QIDI Box patch for Fluidd v1.30.5 - patch version 0.9.0 */`. Alternatively, press **F12** in the browser, open the **Console**, and enter `window.__qidiBoxPatch`.
+   It should print something like `/* QIDI Box patch for Fluidd v1.30.5 - patch version 0.9.1 */`. Alternatively, press **F12** in the browser, open the **Console**, and enter `window.__qidiBoxPatch`.
 
 > [!NOTE]
-> Please test **Load** and **Unload** only when the printer is idle, and be ready to stop it. These buttons may not work properly on firmware 01.01.07.01 (see [known limitations](#known-limitations)).
+> Please test **Load**, **Unload**, and **Uninstall** only when the printer is idle, and stay next to the printer. They move filament and may heat the nozzle, just like the same functions on the printer display.
 
 ### How do I know if there is a newer version?
 
@@ -253,7 +272,8 @@ Then clear your browser cache again (step 9).
 | Box card is blank or Fluidd looks broken | Restore the backup (see [How to undo the patch](#how-to-undo-the-patch)) and clear the cache. |
 | A slot shows `?` or empty although filament is inserted | The printer reports the slot as empty. Push the filament in until it triggers the slot sensor, or check the sensor. You can see the state with `http://PRINTER_IP:7125/printer/objects/query?box_stepper%20slot1` (`runout_button: 0` means filament detected). |
 | Wrong material list for my nozzle | The list is chosen from `nozzle_diameter` in `printer.cfg`. Make sure it matches your installed nozzle. |
-| Load / Unload buttons are grayed out | Known limitation (see above). Not fixed by this patch. |
+| Load / Unload buttons are grayed out | Unload is only enabled for the slot that the printer reports as loaded (`box_extras.loaded_slot`). Check it with `http://PRINTER_IP:7125/printer/objects/query?box_extras`. `slot16` means nothing from the box is loaded. |
+| A button does nothing | Check the console history right after the click: `http://PRINTER_IP:7125/server/gcode_store?count=20`. The command should read `LOAD_FILAMENT_CONTROL SLOT=<n>` (or `UNLOAD_...`, `EJECT_...`, `READ_RFID`). If you see the old `E_LOAD`/`RFID_READ`, the old file is still loaded (clear the cache). |
 
 When reporting an issue, please include your firmware version, the output of `cat .version` from step 5, and a screenshot of the box card.
 
@@ -266,7 +286,7 @@ When reporting an issue, please include your firmware version, the output of `ca
 Requirements: Python 3. No extra packages.
 
 ```bash
-python patch_qidi_box.py --version 0.9.0 <original index.js> <output index.js> \
+python patch_qidi_box.py --version 0.9.1 <original index.js> <output index.js> \
     filament-0.2.json filament-0.4.json filament-0.6.json filament-0.8.json
 ```
 
