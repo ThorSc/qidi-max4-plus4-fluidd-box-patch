@@ -50,7 +50,8 @@ PLATE_HELPER = r'''const qbxPrintParams=async f=>{const p={filename:f};if(!/\.3m
 DATA_HELPER = r'''const qbxMccBox=P=>{const m=P&&P.multi_color_controller;return m&&m.box?m:null};
 const qbxSlotInfo=(P,m)=>{const n=Math.floor(m/4),k=m%4,c=qbxMccBox(P);if(c){const b=c.box,p="box"+n+"_filament_info_"+k+"_";if(b[p+"filament_id"]!==void 0)return{id:b[p+"filament_id"],name:b[p+"filament_str"],type:b[p+"filament_type"],vendor:b[p+"vendor_str"],color:b[p+"color_rgb_str"]}}const i=P?.box_extras?.boxes?.[n]?.filament_info?.[k];return i?{id:i.filament_id,name:i.filament_str,type:i.filament_type,vendor:i.vendor_str,color:i.color_rgb_str}:null};
 const qbxVarsMcc=(r,o)=>{const c=qbxMccBox(r&&r.printer);if(!c)return o;const b=c.box,cnt=Math.max(o.boxCount||0,c.box_count||b.box_count||0);for(let n=0;n<cnt;n++)for(let k=0;k<4;k++){const p="box"+n+"_filament_info_"+k+"_",m=n*4+k;if(b[p+"filament_id"]!==void 0){o.filamentSlot[m]=b[p+"filament_id"];o.colorSlot[m]=b[p+"color_rgb_str"]}}const x=c.extra&&c.extra.filament_info;x&&x.filament_id!==void 0&&(o.rackExtra=[x.color_rgb_str,x.filament_id,o.rackExtra[2]]);return o};
-const qbxBusy=P=>{const o=P?.multi_color_controller?.operation,e=P?.box_extras;return!!(o&&o.box_button_state||e&&e.box_button_state)};
+const qbxBusy=P=>{const o=P?.multi_color_controller?.operation,e=P?.box_extras,k=P?.multi_color_controller?.task;return!!(o&&o.box_button_state||e&&e.box_button_state||k&&k.flow_id)};
+const qbxEndstops=P=>{const x=P?.box_extras||{},b=qbxMccBox(P)?.box||{},f=P?.["filament_switch_sensor filament_switch_sensor"]||{};return{e:x.e_endstop_state!==void 0?x.e_endstop_state:b.e_endstop_state!==void 0?b.e_endstop_state:f.filament_detected?1:0,b:x.b_endstop_state!==void 0?x.b_endstop_state:b.b_endstop_state}};
 const qbxIsLoaded=c=>{const P=c.$store.state.printer.printer,e=P.box_extras,m=qbxMccBox(P);if(e&&e.b_endstop_state!==void 0)return e.b_endstop_state===0&&c.variables.lastLoadSlot===c.selectIndex;const l=m&&m.box.loaded_slot||e&&e.loaded_slot;return l==="slot"+c.selectIndex};
 const qbxNewFmt=c=>{const v=c.$store.state.printer.printer.save_variables?.variables||{};return[0,1,2,3].some(i=>typeof v["filament_slot"+i]==="string")};
 const qbxHas=(c,n)=>n in(c.$store.getters["printer/getAvailableCommands"]||{});
@@ -97,6 +98,11 @@ edits = [
  # Busy state of the box (buttons are disabled while it works)
  ('get isOperating(){const t=this.$store.state.printer.printer.box_extras;return!(!t||!t.box_button_state)}',
   'get isOperating(){return qbxBusy(this.$store.state.printer.printer)}', 1),
+ # Print start with the box switched off: the end stop values (extruder, box) are no longer reported in
+ # box_extras on newer firmware. Take them from multi_color_controller / the filament sensor instead of
+ # blocking the print.
+ ('get isOkPrinter(){return this.enableBox===!1?this.$store.state.printer.printer.box_extras.e_endstop_state===1?this.$store.state.printer.printer.box_extras.b_endstop_state===0?',
+  'get isOkPrinter(){const E=qbxEndstops(this.$store.state.printer.printer);return this.enableBox===!1?E.e===1?E.b===0?', 1),
  # Material dropdown: only the entries of the format that the firmware uses (text IDs or legacy numbers)
  ('for(const s in this.officialFilasListDictData)s.startsWith("fila")&&t.add(this.officialFilasListDictData[s].filament);return Array.from(t)}',
   'for(const s in this.officialFilasListDictData)s.startsWith("fila")&&qbxNewFmt(this)===!/^fila\\d+$/.test(s)&&t.add(this.officialFilasListDictData[s].filament);return Array.from(t)}', 1),
