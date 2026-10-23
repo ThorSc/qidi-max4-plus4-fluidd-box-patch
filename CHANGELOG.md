@@ -37,7 +37,7 @@ Makes the box card buttons work again on firmware **01.01.07.01**. Update from 0
 ### Known issues
 
 - `box_button_state` is not reported by the firmware, so the buttons are not disabled while an operation is running.
-- If Spoolman is connected and *Show spool selection dialog on print start* is on, Fluidd skips the box slot-mapping dialog (original Fluidd behavior). See the README for workarounds.
+- Unconfirmed (based on reading the Fluidd code, not yet seen on a printer): if Spoolman is connected and *Show spool selection dialog on print start* is on, Fluidd may skip the box slot-mapping dialog (original Fluidd behavior). See the README.
 - Starting a `.3mf` file from Fluidd can fail on firmware 01.01.07.01 with `3MF processing error: [Errno 2] No such file or directory: '/home/qidi/printer_data/.temp/shadow_native_plate_1.gcode'`. The error comes from the firmware, not from this patch, and is not fixed here (under investigation). Workaround: start from the printer display or export plain `.gcode`.
 - Testing is ongoing. This changelog and the patched file will be updated as results come in.
 
