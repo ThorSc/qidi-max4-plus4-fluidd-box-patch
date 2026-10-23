@@ -87,6 +87,34 @@ Open for the Plus 4:
 - Test of the old Fluidd's buttons (Load, Unload, Uninstall, RFID) on an idle Plus 4.
 - The contents of the archive `v2.1.1国外.rar` (needs an unpacker) to compare the Plus 4 box modules with the Max 4 repository.
 
+## 4b. Unified data source `multi_color_controller` (live check on three printers, 2026-10-23)
+
+The notes of the RFID Wisp project (`C:\DEV\RFIDwisp-dev`, tested on Max 4, both Plus 4 and a Q2) and a live read-only query show: the Moonraker object `multi_color_controller` is present with the same structure on the Max 4 (01.01.07.01) and on both Plus 4 (2.1.1). It carries the **already resolved** data, so no ID lists are needed:
+
+| Content | Fields |
+|---|---|
+| Per slot (flat names) | `box<N>_filament_info_<M>_filament_str`, `_filament_type`, `_vendor_str`, `_color_rgb_str` (hex list), `_filament_id`, `_min_temp`, `_max_temp`, `_box_min_temp`, `_box_max_temp`, `_filament_per`, `_info_from_rfid`, `_read_rfid_state` |
+| Per box | `box<N>_aht20_humidity`, `_aht20_temp`, `_box_inserted_<M>`, `_filament_inserted_<M>`, `_box_target_temp`, `_dry_state`, `_end_time`, `_is_online` |
+| Global in `box` | `b_endstop_state`, `loaded_slot`, `last_load_slot`, `is_tool_change`, `auto_refill`, `box_count`, `buffer_*` |
+| `operation` | `box_button_state`, `operate_state`, `active_slot` (replaces `box_extras.box_button_state` on the Max 4) |
+| `extra` | the external spool (`identity: external`) with name, color, type, temperatures |
+| `task` | `flow_id`, `current_queue`, `current_step`, `is_paused` (state of running box flows) |
+| Settings | `enable_box`, `auto_read_rfid`, `auto_init_detect`, `auto_reload_detect`, `load_retry_num` |
+
+Consequences:
+
+- A single data layer for Max 4 and Plus 4 is possible: read `multi_color_controller` when present, fall back to the old `save_variables` format otherwise (RFID Wisp does exactly this). The embedded filament lists are then only needed for the material dropdown.
+- The fields that disappeared from `box_extras` on the Max 4 (`b_endstop_state`, `box_button_state`) exist in `multi_color_controller` (`box.b_endstop_state`, `operation.box_button_state`).
+- Older firmware versions (before the change) were only covered by unit tests in RFID Wisp; nobody had such a printer for live tests.
+
+## 4c. Print start on the Plus 4
+
+The Plus 4 2.1.1 sources (`virtual_sdcard.py`, `klippy_apis.py` in `X-Plus4/Firmware/v2.1.1/div`) differ from the Max 4 firmware:
+
+- Klipper's `SDCARD_PRINT_FILE` only opens plain G-code files. There is **no 3MF handling and no plate index** (Moonraker accepts `plateindex` but does not pass it on).
+- The `.3mf` error seen on the Max 4 (`shadow_native_plate_1.gcode`) therefore cannot occur on the Plus 4 2.1.1; printing `.3mf` files from Fluidd is simply not supported there.
+- The plate-index change of this repository is harmless on the Plus 4 (it only acts on `.3mf` file names).
+
 ## 5. Options
 
 | Option | Content | Effort (estimate) | Assessment |
