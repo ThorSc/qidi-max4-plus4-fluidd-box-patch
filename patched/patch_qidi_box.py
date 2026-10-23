@@ -80,6 +80,13 @@ edits = [
  # E_BOX/E_LOAD/E_UNLOAD are still accepted but no longer do anything.
  ('const n=["E_BOX","E_LOAD","E_UNLOAD"];I.printerGcodeScript(`${n[t-1]} slot=${s}`)',
   'const n=["EJECT_FILAMENT_CONTROL","LOAD_FILAMENT_CONTROL","UNLOAD_FILAMENT_CONTROL"];I.printerGcodeScript(`${n[t-1]} SLOT=${s}`)', 1),
+ # Print start without used_extruders in the file metadata (e.g. a .3mf whose only plate is not plate 1):
+ # Fluidd silently mapped every tool to the same-numbered slot (T0 -> slot0) and started the print without
+ # showing the slot-mapping dialog. Show the dialog instead, using preset_colours/filament_type as tools.
+ ('const n=e.getFileMeta(t,s);if(((n==null?void 0:n.used_extruders)??[]).length>0)return!0;for(let i=0;',
+  'const n=e.getFileMeta(t,s);if(((n==null?void 0:n.used_extruders)??[]).length>0||((n==null?void 0:n.preset_colours)??[]).length>0)return!0;for(let i=0;', 1),
+ ('get usedExtruders(){var t;return((t=this.fileMeta)==null?void 0:t.used_extruders)||[]}',
+  'get usedExtruders(){var t;const u=(t=this.fileMeta)==null?void 0:t.used_extruders;return u&&u.length?u:Array.from({length:((t=this.fileMeta)==null?void 0:t.preset_colours||[]).length},(c,i)=>i)}', 1),
  # Print start: pass the plate index of .3mf files (see PLATE_HELPER above)
  ('async printerPrintStart(r){he("printer.print.start",{dispatch:"void",params:{filename:r}})}',
   'async printerPrintStart(r){he("printer.print.start",{dispatch:"void",params:await qbxPrintParams(r)})}', 1),
