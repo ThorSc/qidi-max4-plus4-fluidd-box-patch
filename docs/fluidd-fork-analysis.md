@@ -77,13 +77,13 @@ Sources: firmware folders 1.7.1 (repository), 1.8.2 and v2.1.1 (Fluidd folders),
 
 Interpretation:
 
-- The Max 4 firmware (01.01.07.01) is **ahead** of the Plus 4 in this transition: new data format and removed fields on the Max 4, new commands but still the old data format on the Plus 4. A later Plus 4 update will probably bring the same changes.
+- The Max 4 firmware (01.01.07.01) looks **ahead** of the Plus 4 firmware (2.1.1) in this transition (inference from the data formats only; the version numbers of the two product lines cannot be compared): new data format and removed fields on the Max 4, new commands but still the old data format on the Plus 4. A later Plus 4 update will probably bring the same changes.
 - The patch of this repository is written for the Max 4 format. On the current Plus 4 it would **not** work as is: it replaces the legacy `fila<N>` list (numeric IDs like `39`) with the new string IDs. A single patch for both printers needs format detection (numeric IDs: keep the legacy list; string IDs: use the embedded list).
 - Whether the old commands (`E_LOAD`, `RFID_READ`) still work on the current Plus 4 firmware is **not tested** (both printers were printing).
 
 Open for the Plus 4:
 
-- Which firmware version do QIDI4-1 and QIDI4-2 run (display: settings, about)?
+- Firmware version: both printers (QIDI4-1 and QIDI4-2) run **v2.1.1** (reported by the author). This matches the bundle they serve (identical to the one in the `v2.1.1 Fluidd` folder), so the findings above describe firmware 2.1.1: new commands known, slot data still in the old format, old Fluidd.
 - Test of the old Fluidd's buttons (Load, Unload, Uninstall, RFID) on an idle Plus 4.
 - The contents of the archive `v2.1.1国外.rar` (needs an unpacker) to compare the Plus 4 box modules with the Max 4 repository.
 
