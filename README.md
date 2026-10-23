@@ -1,6 +1,6 @@
 # QIDI Box Display Fix for Fluidd (QIDI X-Max 4, firmware 01.01.07.01)
 
-**Current version: `0.9.1` (pre-release, still being tested).** Always download the file from the newest [release](../../releases/latest). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
+**Current version: `0.9.1` (pre-release, still being tested).** Always download the file from the [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) with the **highest version number** (all current versions are pre-releases). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
 
 > [!WARNING]
 > **Use at your own risk. No warranty of any kind.**
@@ -106,7 +106,7 @@ The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). I
 | File | SHA-256 |
 |---|---|
 | Original `index-DlFvHGAh.js` (QIDI_MAX4 repo, Fluidd v1.30.5) | `178b2e076d3a75716819ee13f9ea1f0c92e536546c8b2adafde8632f6723710c` |
-| Patched `index-DlFvHGAh.js` | See `patched/SHA256SUMS` and the notes of the matching [release](../../releases) |
+| Patched `index-DlFvHGAh.js` | See `patched/SHA256SUMS` and the notes of the matching [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) |
 
 ---
 
@@ -126,7 +126,7 @@ The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). I
 
 ### Step 1: Download the patched file
 
-1. Open the [latest release](../../releases/latest) of this repository.
+1. Open the [release list](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) of this repository and pick the release with the **highest version number** (the top entry).
 2. Under **Assets**, download **`index-DlFvHGAh.js`**. Keep the file name exactly as it is. (Optionally also download `SHA256SUMS` for step 8.)
 3. Save it somewhere easy to find, for example your Desktop.
 4. Note the **version number** of the release (for example `0.9.1`).
@@ -244,7 +244,7 @@ You do **not** need to restart the printer.
 ### How do I know if there is a newer version?
 
 1. Check your installed version (step 10, point 4).
-2. Open the [latest release](../../releases/latest) and compare its version number.
+2. Open the [release list](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) and compare the highest version number there with yours.
 3. If the release has a **higher** number, repeat steps 1-9 with the new file. Your backup from step 6 can be replaced by a new one.
 4. Read the [CHANGELOG](CHANGELOG.md) to see what is new. Versions below `1.0.0` are pre-releases.
 
