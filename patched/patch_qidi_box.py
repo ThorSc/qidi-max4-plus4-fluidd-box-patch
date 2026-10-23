@@ -30,6 +30,12 @@ for jsn in jsons:
         e = [n, v["type"], v["filament_vendor"]]
         if lst.setdefault(v["filament_id"], e) != e:
             print("Conflict", m.group(1), v["filament_id"], lst[v["filament_id"]], e)
+# Print start for .3mf files: the firmware (Moonraker printer.print.start) takes an optional "plateindex"
+# (default "1"). A .3mf that only contains e.g. Metadata/plate_7.gcode fails with
+# "shadow_native_plate_1.gcode not found" unless the right plate is passed. The plate number is read from
+# the ZIP central directory with two small HTTP range requests (the whole file is not downloaded).
+PLATE_HELPER = r'''const qbxPrintParams=async f=>{const p={filename:f};if(!/\.3mf$/i.test(f))return p;try{const get=h=>rt.serverFilesGet("gcodes/"+f,{headers:{Range:h},responseType:"arraybuffer"});const r=await get("bytes=-70000"),t=new Uint8Array(r.data),cr=/\/(\d+)\s*$/.exec(r.headers&&r.headers["content-range"]||""),ts=(cr?+cr[1]:t.length)-t.length,v=new DataView(t.buffer,t.byteOffset,t.byteLength);let e=-1;for(let i=t.length-22;i>=0;i--)if(v.getUint32(i,!0)===101010256){e=i;break}if(e<0)return p;const sz=v.getUint32(e+12,!0),off=v.getUint32(e+16,!0);if(!sz||sz>5e6||off===4294967295)return p;const c=off>=ts?t.subarray(off-ts,off-ts+sz):new Uint8Array((await get(`bytes=${off}-${off+sz-1}`)).data),d=new DataView(c.buffer,c.byteOffset,c.byteLength),td=new TextDecoder,pl=[];let o=0;while(o+46<=c.length&&d.getUint32(o,!0)===33639248){const n=d.getUint16(o+28,!0),x=d.getUint16(o+30,!0),m=d.getUint16(o+32,!0),q=/^Metadata\/plate_(\d+)\.gcode$/i.exec(td.decode(c.subarray(o+46,o+46+n)));q&&pl.push(+q[1]);o+=46+n+x+m}pl.length&&(p.plateindex=String(Math.min(...pl)))}catch(e){console.warn("qbx plate detection failed",e)}return p};
+'''
 helper = (
  '/* QIDI Box patch for Fluidd v1.30.5 - patch version ' + version + ' */\n'
  'window.__qidiBoxPatch="' + version + '";\n'
@@ -37,6 +43,7 @@ helper = (
  'const qbxIsLoaded=c=>{const e=c.$store.state.printer.printer.box_extras;if(!e)return!1;if(e.b_endstop_state!==void 0)return e.b_endstop_state===0&&c.variables.lastLoadSlot===c.selectIndex;return e.loaded_slot==="slot"+c.selectIndex};\n'
  'const qbxFil=' + json.dumps(qfd, separators=(",", ":"), ensure_ascii=False) + ';\n'
  'const qbxFilMerge=(d,c)=>{if(!d)return d;for(const k of Object.keys(d))/^fila\\d+$/.test(k)&&delete d[k];let n;try{n=Number(c.$store.state.printer.printer.configfile.settings.extruder.nozzle_diameter).toFixed(1)}catch(e){}const l=qbxFil[n]||qbxFil["0.4"]||Object.assign({},...Object.values(qbxFil));for(const i in l)d["fila"+i]={filament:l[i][0],type:l[i][1],vendor:l[i][2]};return d};\n'
+ + PLATE_HELPER
 )
 edits = [
  # Colors: keep the raw value (list/hex string), no parseInt
@@ -71,6 +78,9 @@ edits = [
  # E_BOX/E_LOAD/E_UNLOAD are still accepted but no longer do anything.
  ('const n=["E_BOX","E_LOAD","E_UNLOAD"];I.printerGcodeScript(`${n[t-1]} slot=${s}`)',
   'const n=["EJECT_FILAMENT_CONTROL","LOAD_FILAMENT_CONTROL","UNLOAD_FILAMENT_CONTROL"];I.printerGcodeScript(`${n[t-1]} SLOT=${s}`)', 1),
+ # Print start: pass the plate index of .3mf files (see PLATE_HELPER above)
+ ('async printerPrintStart(r){he("printer.print.start",{dispatch:"void",params:{filename:r}})}',
+  'async printerPrintStart(r){he("printer.print.start",{dispatch:"void",params:await qbxPrintParams(r)})}', 1),
  # Firmware 01.01.07.01 renamed the RFID command and expects a numeric slot:
  # RFID_READ SLOT=slot2 -> READ_RFID SLOT=2
  ('I.printerGcodeScript(`RFID_READ SLOT=slot${t}`)', 'I.printerGcodeScript(`READ_RFID SLOT=${t}`)', 1),
