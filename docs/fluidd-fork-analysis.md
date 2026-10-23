@@ -122,6 +122,30 @@ The Plus 4 2.1.1 sources (`virtual_sdcard.py`, `klippy_apis.py` in `X-Plus4/Firm
 - The QIDI bundle contains **no** user interface for functions that the printers offer and the display uses, for example box and external drying (`BOX_START_DRYING`, `EX_START_DRYING`, `SET_FILAMENT_DRY`, `SET_BOX_TEMP_CONTROL`), AI detection (`ENABLE_AI_DETECT`), or `UPDATE_FILAMENT_INFORMATION`. QIDI never exposed these in Fluidd; they would be new functions, not part of what has to be preserved.
 - Found by the string-level comparison, the QIDI-specific functions in Fluidd are: the box card with its settings, automatic reload and humidity display, the slot-mapping dialog at print start, the `.3mf` handling, the "Qidi Tech" theme preset, the removed multi-printer management, and a few language changes.
 
+## 4e. Comparison with a third-party patch for the Q2
+
+Repository `Greg-LFT/Qidi-Q2-Fluidd-widget-box-repair` (MIT, created 2026-10-22, one script `patch_fluidd_box.py` that patches the bundle on the printer; developed with AI assistance, tested by the author on a Q2 with firmware 01.01.03.01). Read-only comparison, the script was not run.
+
+Independent confirmation of our findings (for firmware 01.01.03.01 of the Q2): filament IDs as text (`QFA00`), colors as hex lists (`['060606']`), renamed commands `LOAD/UNLOAD/EJECT_FILAMENT_CONTROL SLOT=<n>` and `READ_RFID SLOT=<n>` (numeric slot), and `b_endstop_state` moved into `multi_color_controller.box`.
+
+| | Third-party Q2 patch | This repository |
+|---|---|---|
+| Approach | Translates the new data back to the legacy numbers inside `getVariables` (text ID to legacy number through a hand-made table of about 45 IDs, hex color to the nearest of 24 palette colors) and converts back when writing | Reads the resolved data (name, color, type, vendor) from `multi_color_controller` and keeps exact values; legacy numbers only as fallback |
+| Colors | Snapped to the 24-color palette (custom colors are approximated) | Exact hex value |
+| Unknown or third-party filament IDs | Fall back to a default entry (wrong material possible) | Name and type come from the firmware |
+| Print start | Not covered | Plate index for `.3mf`, slot dialog without `used_extruders` |
+| Devices | Q2 | Max 4 and Plus 4 (Q2 not tested) |
+| Busy state | `box_button_state` or `task.flow_id` | `operation.box_button_state` |
+| Box disabled (`enable_box = 0`) | Fixes `isOkPrinter` (end stop values from `multi_color_controller` and from the filament sensor) | **Not handled yet** |
+
+Compatibility: all three code blocks that the Q2 patch replaces occur exactly once in the Max 4 bundle (`index-DlFvHGAh.js`). The Q2 bundle therefore very likely has the same code as the Max 4 bundle, and this repository's patch should apply to it as well. This needs a Q2 tester and the Q2 bundle to confirm.
+
+Take-aways for this repository:
+
+1. `isOkPrinter` (box switched off): the original reads `box_extras.e_endstop_state` and `b_endstop_state`, which the Max 4 no longer reports. By reading the code, printing from Fluidd with the box switched off would be blocked there. To be fixed and tested.
+2. Consider `multi_color_controller.task.flow_id` as an additional "box is working" signal (check on the Max 4 and Plus 4 whether it is set during a load).
+3. Cross-check of the command names on a third device: no new information, same names.
+
 ## 5. Options
 
 | Option | Content | Effort (estimate) | Assessment |
