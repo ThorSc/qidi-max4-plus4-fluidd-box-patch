@@ -115,6 +115,13 @@ The Plus 4 2.1.1 sources (`virtual_sdcard.py`, `klippy_apis.py` in `X-Plus4/Firm
 - The `.3mf` error seen on the Max 4 (`shadow_native_plate_1.gcode`) therefore cannot occur on the Plus 4 2.1.1; printing `.3mf` files from Fluidd is simply not supported there.
 - The plate-index change of this repository is harmless on the Plus 4 (it only acts on `.3mf` file names).
 
+## 4d. Additional measurements (2026-10-23)
+
+- The Max 4 bundle (`v1.30.5`) and the Plus 4 bundle (`v1.30.4`) use the **same 711 translation keys** and contain the **same 36 QIDI additions** (all box and file-dialog texts) compared with upstream. QIDI's user-interface changes are therefore identical for both devices, which supports a single fork.
+- The two QIDI API helpers (`breakMacroPost` → `/printer/breakmacro`, `breakHeaterPost` → `/printer/breakheater`) are defined in the bundle but **never called**. They are dead code, not a feature.
+- The QIDI bundle contains **no** user interface for functions that the printers offer and the display uses, for example box and external drying (`BOX_START_DRYING`, `EX_START_DRYING`, `SET_FILAMENT_DRY`, `SET_BOX_TEMP_CONTROL`), AI detection (`ENABLE_AI_DETECT`), or `UPDATE_FILAMENT_INFORMATION`. QIDI never exposed these in Fluidd; they would be new functions, not part of what has to be preserved.
+- Found by the string-level comparison, the QIDI-specific functions in Fluidd are: the box card with its settings, automatic reload and humidity display, the slot-mapping dialog at print start, the `.3mf` handling, the "Qidi Tech" theme preset, the removed multi-printer management, and a few language changes.
+
 ## 5. Options
 
 | Option | Content | Effort (estimate) | Assessment |
