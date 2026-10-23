@@ -61,6 +61,32 @@ Already handled by the patch in this repository (see `CHANGELOG.md`):
 
 This list shows how often the firmware changes the interface without notice.
 
+## 4a. Plus 4 findings (read-only, 2026-10-23)
+
+Sources: firmware folders 1.7.1 (repository), 1.8.2 and v2.1.1 (Fluidd folders), a configuration backup of printer QIDI4-1 (folder `1.7.3`, 2025-11-15), and live read-only queries (Moonraker `GET`) to two Plus 4 printers (QIDI4-1, QIDI4-2) while both were printing. Nothing was changed on the printers.
+
+| Finding | Result |
+|---|---|
+| Fluidd bundle | Plus 4 firmware 1.8.2 and v2.1.1 ship the **same** bundle `index-BHXUyR-O.js` (SHA-256 prefix `4770bade`, Fluidd `v1.30.4`, 1,772,209 bytes). Both printers serve exactly this file. |
+| Compared with the Max 4 bundle | Different build (Max 4: `v1.30.5`, 1,778,263 bytes). Both still send the **old** commands (`RFID_READ`, `E_LOAD`, `E_UNLOAD`, `E_BOX`). |
+| Commands known to the Plus 4 firmware (`HELP`) | The **new** commands exist already: `READ_RFID`, `LOAD_FILAMENT_CONTROL`, `UNLOAD_FILAMENT_CONTROL`, `EJECT_FILAMENT_CONTROL`, `UPDATE_FILAMENT_INFORMATION`, `SET_ENABLE_AUTO_RELOAD`, `SET_ENABLE_RFID_READ`, `SET_ENABLE_INIT_READ_RFID`, plus per-tool `UNLOAD_T0..T15` and the object `rfid_bridge`. |
+| Slot data format | **Old** format: `color_slot0 = 2`, `filament_slot0 = 39` (integer IDs). The Max 4 firmware 01.01.07.01 already uses `['228332']` and `'QFG00'`. |
+| `box_extras` fields | The Plus 4 still reports `b_endstop_state`, `e_endstop_state`, `box_button_state`, and `loaded_slot`. The Max 4 no longer reports the first three. |
+| Box modules | Older Plus 4 sources (folder "Optionale Qidi Box Makro Dateien") are plain Python: `box_extras.py` registers `E_LOAD`/`E_UNLOAD`/`E_BOX`, `box_stepper.py` registers `RFID_READ` with the slot name. The current firmware's versions of these files were not available. |
+| Klipper / MCU | Both printers: Klipper `v0.12.0-65-g96ab9069-dirty`, MCU build 2024-03-01, box MCU `KLP_MCU_MKS_V1_1.1.1`, Moonraker API 1.4.0, nozzle 0.4. |
+
+Interpretation:
+
+- The Max 4 firmware (01.01.07.01) is **ahead** of the Plus 4 in this transition: new data format and removed fields on the Max 4, new commands but still the old data format on the Plus 4. A later Plus 4 update will probably bring the same changes.
+- The patch of this repository is written for the Max 4 format. On the current Plus 4 it would **not** work as is: it replaces the legacy `fila<N>` list (numeric IDs like `39`) with the new string IDs. A single patch for both printers needs format detection (numeric IDs: keep the legacy list; string IDs: use the embedded list).
+- Whether the old commands (`E_LOAD`, `RFID_READ`) still work on the current Plus 4 firmware is **not tested** (both printers were printing).
+
+Open for the Plus 4:
+
+- Which firmware version do QIDI4-1 and QIDI4-2 run (display: settings, about)?
+- Test of the old Fluidd's buttons (Load, Unload, Uninstall, RFID) on an idle Plus 4.
+- The contents of the archive `v2.1.1国外.rar` (needs an unpacker) to compare the Plus 4 box modules with the Max 4 repository.
+
 ## 5. Options
 
 | Option | Content | Effort (estimate) | Assessment |
