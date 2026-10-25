@@ -13,6 +13,44 @@ Every release lists its SHA-256 checksum in the release notes and in `patched/SH
 
 ---
 
+## [0.9.2] - Pre-release
+
+Print start and data source. Update from 0.9.1 by replacing `index-DlFvHGAh.js` again (see the README). This release is for the **Max 4** (Fluidd v1.30.5). The build script can also patch the Plus 4 bundle (Fluidd v1.30.4), but that build is not part of this release and has not been tested.
+
+### Fixed
+
+- **Starting a `.3mf` file from Fluidd failed** with `3MF processing error … shadow_native_plate_1.gcode` when the file does not contain plate 1. The plate index is now sent with the print start (read from the ZIP directory with two small range requests to the page origin).
+- **Slot-mapping dialog was skipped** when the file metadata has no `used_extruders` (Fluidd silently mapped T0 to slot 0 and started the print). The dialog now opens and uses `preset_colours` and `filament_type` as the tools.
+- **Print start with the box switched off** was always blocked with "No filament detected" on the Max 4, because the end stop values are no longer reported in `box_extras`. They are now taken from `multi_color_controller` or the filament sensor.
+
+### Changed
+
+- Name, vendor, color, and type of every slot and of the external spool come from `multi_color_controller` (resolved by the firmware). `box_extras.boxes` and the old `save_variables` path remain as fallbacks.
+- The loaded slot comes from `multi_color_controller` (`loaded_slot`). The busy state also considers `task.flow_id`.
+- Color and material are written in the format of the firmware (text IDs on the Max 4).
+- The Load, Unload, Uninstall, and RFID re-read buttons use the new commands when the printer lists them, otherwise the old ones.
+
+### Tested
+
+- Max 4: starting the `.3mf` file with plate index `7` from Fluidd (console history shows `PLATEINDEX="7"`), the print started and ran for hours.
+- Max 4: the slot-mapping dialog wrote the mapping (`value_t0`) and the print started with that slot (loaded slot matches).
+- All other changes were checked in a browser with live read-only data of the Max 4 and of two Plus 4 printers (syntax, data layer, writes, busy state, `isOkPrinter`), but not on the printers themselves.
+
+### Not tested yet
+
+- Load, Unload, and RFID re-read with 0.9.2 (tested with 0.9.1). Uninstall: the command was sent as intended, the effect was not checked.
+- `task.flow_id` as a busy signal (empty when idle, unknown during a load).
+- Print start with the box switched off.
+- Spoolman integration, and whether it skips the slot-mapping dialog.
+- The Plus 4 build (not part of this release).
+
+### Known issues
+
+- Tools that the `.3mf` model does not use may be offered in the slot-mapping dialog when the metadata has no `used_extruders`. Assign them a slot or the print stays blocked.
+- Testing is ongoing. This changelog and the patched file will be updated as results come in.
+
+---
+
 ## [0.9.1] - Pre-release
 
 Makes the box card buttons work again on firmware **01.01.07.01**. Update from 0.9.0 by replacing `index-DlFvHGAh.js` again (see the README).

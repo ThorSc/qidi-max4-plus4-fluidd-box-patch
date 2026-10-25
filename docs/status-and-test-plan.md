@@ -1,6 +1,8 @@
 # Status and test plan
 
-Working document. State as of 2026-10-23. Written so that work can resume without the chat history. Nothing on branch `feature/print-start` has been pushed.
+Working document. State as of 2026-10-25 (first written 2026-10-23). Written so that work can resume without the chat history. Nothing on branch `feature/print-start` has been pushed.
+
+**2026-10-25:** release 0.9.2 (Max 4 only) is prepared locally on the branch: `patched/index-DlFvHGAh.js` is bit-identical to the test build that runs on the Max 4 (SHA-256 `b15431e3…2848f20`), CHANGELOG and README are updated. Waiting for the author's explicit approval to merge into `main`, push, tag, and publish. All printers were printing on 2026-10-25, so the planned tests (section 4) are still open.
 
 ## 1. Where things stand
 
@@ -38,7 +40,9 @@ The file name must stay the name that the printer's `index.html` loads (`index-D
 |---|---|
 | Release 0.9.1 items (color/material display, write-back, Load/Unload/Uninstall, RFID button, Box Settings switches) | Tested on the Max 4 by the author |
 | Plate index fix (`PLATEINDEX="7"`, print starts) | Tested on the Max 4 (print was cancelled right after the start) |
-| Items 2 to 7 above | **Only simulated in a browser with live read-only data of the three printers. Not tested on the printers.** |
+| Items 1 and 2 above (plate index, slot-mapping dialog) | **Observed on the Max 4 on 2026-10-25** (console history: `SAVE_VARIABLE value_t0`, `SDCARD_PRINT_FILE … PLATEINDEX="7"`; the print ran for hours and the loaded slot matches `value_t0`). Preselection of the best slot was not checked. |
+| Items 3 to 7 above, other than the two above | Only simulated in a browser with live read-only data of the three printers. Not tested on the printers. The Max 4 console history only shows an `EJECT_FILAMENT_CONTROL SLOT=2` sent from Fluidd. |
+| Plus 4 build | **Not deployed on any printer** (the Plus 4 printers still serve the original bundle) |
 | Spoolman skipping the slot-mapping dialog | Only read from the code, **unconfirmed** |
 | Plus 4 behavior of the new commands | **Unknown** (listed in `HELP`, never run) |
 | `task.flow_id` during a load | **Unknown** (empty when idle) |
