@@ -89,7 +89,7 @@ Open for the Plus 4:
 
 ## 4b. Unified data source `multi_color_controller` (live check on three printers, 2026-10-23)
 
-The notes of the RFID Wisp project (`C:\DEV\RFIDwisp-dev`, tested on Max 4, both Plus 4 and a Q2) and a live read-only query show: the Moonraker object `multi_color_controller` is present with the same structure on the Max 4 (01.01.07.01) and on both Plus 4 (2.1.1). It carries the **already resolved** data, so no ID lists are needed:
+The notes of the RFID Wisp project (the author's own project, tested on Max 4, both Plus 4 and a Q2) and a live read-only query show: the Moonraker object `multi_color_controller` is present with the same structure on the Max 4 (01.01.07.01) and on both Plus 4 (2.1.1). It carries the **already resolved** data, so no ID lists are needed:
 
 | Content | Fields |
 |---|---|
@@ -109,7 +109,7 @@ Consequences:
 
 ## 4c. Print start on the Plus 4
 
-The Plus 4 2.1.1 sources (`virtual_sdcard.py`, `klippy_apis.py` in `X-Plus4/Firmware/v2.1.1/div`) differ from the Max 4 firmware:
+The Plus 4 2.1.1 sources (`virtual_sdcard.py`, `klippy_apis.py`, extracted from the Plus 4 firmware 2.1.1) differ from the Max 4 firmware:
 
 - Klipper's `SDCARD_PRINT_FILE` only opens plain G-code files. There is **no 3MF handling and no plate index** (Moonraker accepts `plateindex` but does not pass it on).
 - The `.3mf` error seen on the Max 4 (`shadow_native_plate_1.gcode`) therefore cannot occur on the Plus 4 2.1.1; printing `.3mf` files from Fluidd is simply not supported there.
