@@ -1,3 +1,5 @@
 # Keep the patched bundle byte-identical (checksum in README) on all platforms
 patched/index-DlFvHGAh.js -text
 patched/SHA256SUMS text eol=lf
+patched/plus4/index-BHXUyR-O.js -text
+patched/plus4/SHA256SUMS text eol=lf

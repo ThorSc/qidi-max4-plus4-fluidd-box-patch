@@ -1,6 +1,6 @@
 # QIDI Box Display Fix for Fluidd (QIDI X-Max 4, firmware 01.01.07.01)
 
-**Current version: `0.9.2` (pre-release, still being tested).** Always download the file from the [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) with the **highest version number** (all current versions are pre-releases). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
+**Current version: `0.9.3` (pre-release, still being tested).** Always download the file from the [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) with the **highest version number** (all current versions are pre-releases). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
 
 > [!WARNING]
 > **Use at your own risk. No warranty of any kind.**
@@ -66,7 +66,7 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 - **Button commands:** Load, Unload, Uninstall, and the RFID re-read button send the new commands (table above), with the slot as a number.
 - **Loaded slot / button enablement:** a slot counts as loaded when `loaded_slot` (from `multi_color_controller` or `box_extras`) equals that slot. If the firmware still reports `b_endstop_state` in `box_extras`, the old rule is used. So Load is disabled and Unload enabled for the loaded slot, and the reverse for all other occupied slots.
 - **Busy state:** the buttons are disabled while `operation.box_button_state`, `box_extras.box_button_state`, or `task.flow_id` is set.
-- **Other firmware, same file:** the build script also patches the Plus 4 bundle (Fluidd v1.30.4) and writes color and material in the legacy number format there. That build is **not part of this release** and not tested.
+- **Plus 4 (firmware 2.1.1):** a separate file `plus4/index-BHXUyR-O.js` is part of the release. It writes color and material in the legacy number format, uses the new Load/Unload/Uninstall commands, and uses the old `RFID_READ` command (the firmware ignores `READ_RFID`).
 
 ### Test status
 
@@ -79,13 +79,12 @@ The patch modifies only the minified Fluidd bundle `assets/index-DlFvHGAh.js`:
 | Writing color/material from the box card (`SAVE_VARIABLE` format) | Reported working (values saved in the same format as the firmware writes them) |
 | Load / Unload / Uninstall buttons | Reported working and in sync with the printer display |
 | Button enablement based on `loaded_slot` | Reported working (Load and Unload enabled as expected) |
-| RFID re-read button (`READ_RFID`) | Reported working |
+| RFID re-read button (`READ_RFID`, Max 4) | Reported working |
+| Plus 4 (2.1.1): display, Load / Unload / Uninstall, color and material write, RFID re-read (`RFID_READ`) | Tested by the author on one printer (console history confirms the commands) |
 | Firmware picks up color/material changes made in Fluidd | Reported working (printer display shows the new values immediately) |
 | Starting a `.3mf` file from Fluidd (plate index) | Observed working on the Max 4 with 0.9.2: plate index `7` is sent (console history), the print started and ran for hours |
 | Print-start slot-mapping dialog | Observed on the Max 4 with 0.9.2: the mapping was written to `value_t0` and the print started with that slot (loaded slot matches). Whether the preselected slot was the best match was not checked. |
-| Load / Unload / RFID re-read with 0.9.2 | **Not re-tested** (tested with 0.9.1) |
-| Uninstall with 0.9.2 | The command was sent as intended (console history); the effect was not checked |
-| `task.flow_id` as busy signal | **Not tested** (empty when idle; unknown during a load) |
+| Load / Unload / Uninstall / RFID re-read on the Max 4 with 0.9.2, `task.flow_id` as busy signal | Reported working by the author |
 | Print start with the box switched off | **Not tested** (checked only by calculation with live printer data) |
 | Spoolman integration (with the box card and the print start) | **Not tested** (the author will test this separately) |
 | "Box Settings" switches (auto reload, RFID on insert, RFID on startup) | Reported working, in sync with the printer display settings |
@@ -137,7 +136,7 @@ The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). I
 1. Open the [release list](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) of this repository and pick the release with the **highest version number** (the top entry).
 2. Under **Assets**, download **`index-DlFvHGAh.js`**. Keep the file name exactly as it is. (Optionally also download `SHA256SUMS` for step 8.)
 3. Save it somewhere easy to find, for example your Desktop.
-4. Note the **version number** of the release (for example `0.9.2`).
+4. Note the **version number** of the release (for example `0.9.3`).
 
 ### Step 2: Install a file transfer program
 
@@ -244,7 +243,7 @@ You do **not** need to restart the printer.
    head -n 1 /home/qidi/fluidd/assets/index-DlFvHGAh.js
    ```
 
-   It should print something like `/* QIDI Box patch for Fluidd - patch version 0.9.2 */`. Alternatively, press **F12** in the browser, open the **Console**, and enter `window.__qidiBoxPatch`.
+   It should print something like `/* QIDI Box patch for Fluidd - patch version 0.9.3 */`. Alternatively, press **F12** in the browser, open the **Console**, and enter `window.__qidiBoxPatch`.
 
 > [!NOTE]
 > Please test **Load**, **Unload**, and **Uninstall** only when the printer is idle, and stay next to the printer. They move filament and may heat the nozzle, just like the same functions on the printer display.
@@ -296,7 +295,7 @@ When reporting an issue, please include your firmware version, the output of `ca
 Requirements: Python 3. No extra packages.
 
 ```bash
-python patch_qidi_box.py --version 0.9.2 <original index.js> <output index.js> \
+python patch_qidi_box.py --version 0.9.3 <original index.js> <output index.js> \
     filament-0.2.json filament-0.4.json filament-0.6.json filament-0.8.json
 ```
 

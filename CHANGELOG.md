@@ -13,6 +13,38 @@ Every release lists its SHA-256 checksum in the release notes and in `patched/SH
 
 ---
 
+## [0.9.3] - Pre-release
+
+Adds the **Plus 4** (firmware 2.1.1, Fluidd v1.30.4) as a second target. Max 4 users update from 0.9.2 by replacing `index-DlFvHGAh.js` again. Plus 4 users use `plus4/index-BHXUyR-O.js` from the release (a different file name, because the Plus 4 bundle has a different hash in its name).
+
+### Added
+
+- **Plus 4 build** (`plus4/index-BHXUyR-O.js`). It reads names, vendor, color, and type from `multi_color_controller` and writes color and material in the legacy number format that the Plus 4 firmware uses.
+
+### Changed
+
+- The RFID re-read button sends `READ_RFID SLOT=<n>` only when the printer lists the command **and** stores the slot data in the new text format (Max 4). Otherwise it sends the old `RFID_READ SLOT=slot<n>`. Reason: the Plus 4 firmware 2.1.1 lists `READ_RFID` but ignores it.
+- The Load, Unload, and Uninstall buttons use the new commands whenever the printer lists them. This also works on the Plus 4 (2.1.1).
+
+### Tested
+
+- Plus 4 (firmware 2.1.1, one printer), reported by the author with the 0.9.2 test build and, for RFID, with the final build: display of slots, names, and colors; Load, Unload, and Uninstall with the new commands (console history shows `LOAD_FILAMENT_CONTROL`, `UNLOAD_FILAMENT_CONTROL`, `EJECT_FILAMENT_CONTROL`); writing color and material as numbers (the printer display shows the change); RFID re-read for slot 0 and slot 1 with `RFID_READ` (console history).
+- Max 4: Load, Unload, Uninstall, RFID re-read, and `task.flow_id` as busy signal were checked by the author with the 0.9.2 build.
+
+### Not tested yet
+
+- The released 0.9.3 files differ from the tested builds only in the version string. On the Max 4 the RFID condition changed slightly (no change in behavior expected); the exact 0.9.3 Max 4 file has not been re-run.
+- Plus 4: print start from Fluidd (the firmware opens plain G-code only, no `.3mf`), Spoolman.
+- Max 4: print start with the box switched off, Spoolman.
+- Q2 (needs a tester and the bundle).
+
+### Known issues
+
+- Plus 4: only colors from the printer's color table and materials from its old list can be set (numeric IDs).
+- Testing is ongoing.
+
+---
+
 ## [0.9.2] - Pre-release
 
 Print start and data source. Update from 0.9.1 by replacing `index-DlFvHGAh.js` again (see the README). This release is for the **Max 4** (Fluidd v1.30.5). The build script can also patch the Plus 4 bundle (Fluidd v1.30.4), but that build is not part of this release and has not been tested.

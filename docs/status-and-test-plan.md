@@ -1,5 +1,7 @@
 # Status and test plan
 
+**2026-10-26 update:** Plus 4 (2.1.1, one printer) tested with the patched build: display, Load/Unload/Uninstall (new commands work), color/material write (numbers), RFID re-read works only with the old `RFID_READ` (`READ_RFID` is accepted but ignored). Patch fixed accordingly and release 0.9.3 (Max 4 + Plus 4 files) prepared on branch `feature/plus4-commands`, not pushed. Still open: print start on the Plus 4, box-off print start and Spoolman on the Max 4, Q2. The sections below are the original plan of 2026-10-25.
+
 Working document. State as of 2026-10-25 (first written 2026-10-23). Written so that work can resume without the chat history. Nothing on branch `feature/print-start` has been pushed.
 
 **2026-10-25:** release 0.9.2 (Max 4 only) is prepared locally on the branch: `patched/index-DlFvHGAh.js` is bit-identical to the test build that runs on the Max 4 (SHA-256 `b15431e3…2848f20`), CHANGELOG and README are updated. Waiting for the author's explicit approval to merge into `main`, push, tag, and publish. All printers were printing on 2026-10-25, so the planned tests (section 4) are still open.
