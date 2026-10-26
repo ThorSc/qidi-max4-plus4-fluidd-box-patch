@@ -1,4 +1,4 @@
-# QIDI Box Display Fix for Fluidd (QIDI X-Max 4, firmware 01.01.07.01)
+# QIDI Box Display Fix for Fluidd (QIDI X-Max 4 firmware 01.01.07.01, Plus 4 firmware 2.1.1)
 
 **Current version: `0.9.3` (pre-release, still being tested).** Always download the file from the [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) with the **highest version number** (all current versions are pre-releases). See the [CHANGELOG](CHANGELOG.md) for what changed and what has been tested.
 
@@ -10,6 +10,15 @@
 > You modify a file on your printer. Read the whole guide first, **make a backup**, and only continue if you are comfortable with that. If you are unsure, do not do it.
 >
 > Only try this while the printer is **idle** (not printing).
+
+### Which file is for my printer?
+
+| Printer | Firmware | File in the release | File name on the printer |
+|---|---|---|---|
+| QIDI X-Max 4 | 01.01.07.01 | `index-DlFvHGAh.js` | `index-DlFvHGAh.js` |
+| QIDI X-Plus 4 | 2.1.1 | `plus4/index-BHXUyR-O.js` (in the release it is listed as `index-BHXUyR-O.js`) | `index-BHXUyR-O.js` |
+
+Use only the file for your printer. Everywhere below, the guide names the Max 4 file `index-DlFvHGAh.js`; on a **Plus 4**, use `index-BHXUyR-O.js` instead (download, search, backup, upload, and undo all work the same). The Plus 4 build was tested by the author on one printer; the Max 4 build on one printer as well. Other models and firmware versions are untested.
 
 ---
 
@@ -113,7 +122,8 @@ The patched file carries a version number (see the [CHANGELOG](CHANGELOG.md)). I
 | File | SHA-256 |
 |---|---|
 | Original `index-DlFvHGAh.js` (QIDI_MAX4 repo, Fluidd v1.30.5) | `178b2e076d3a75716819ee13f9ea1f0c92e536546c8b2adafde8632f6723710c` |
-| Patched `index-DlFvHGAh.js` | See `patched/SHA256SUMS` and the notes of the matching [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) |
+| Original `index-BHXUyR-O.js` (Plus 4, firmware 2.1.1, Fluidd v1.30.4) | `4770bade9c2154fc1f44b3650746bc855eb008e6376f1d24820db59eb541ed59` |
+| Patched `index-DlFvHGAh.js` (Max 4) and `plus4/index-BHXUyR-O.js` (Plus 4) | See `patched/SHA256SUMS` and the notes of the matching [release](https://github.com/ThorSc/qidi-xmax4-fluidd-box-patch/releases) |
 
 ---
 
