@@ -188,7 +188,7 @@ In the same terminal, replace `/home/qidi/fluidd` with the folder from step 4 (t
 cat /home/qidi/fluidd/.version
 ```
 
-It should print **`v1.30.5`**. If it shows something else, stop here.
+It should print **`v1.30.5`** on the Max 4 or **`v1.30.4`** on the Plus 4. If it shows something else, stop here.
 
 ### Step 6: Make a backup (do not skip this)
 
