@@ -118,9 +118,9 @@ edits = [
  # E_BOX/E_LOAD/E_UNLOAD are still accepted there but do nothing. Pick by the commands the printer reports.
  ('const n=["E_BOX","E_LOAD","E_UNLOAD"];I.printerGcodeScript(`${n[t-1]} slot=${s}`)',
   'const n=qbxHas(this,"LOAD_FILAMENT_CONTROL")?["EJECT_FILAMENT_CONTROL","LOAD_FILAMENT_CONTROL","UNLOAD_FILAMENT_CONTROL"]:["E_BOX","E_LOAD","E_UNLOAD"];I.printerGcodeScript(`${n[t-1]} SLOT=${s}`)', 1),
- # RFID re-read: READ_RFID SLOT=<n> on newer firmware, RFID_READ SLOT=slot<n> on older firmware
+ # RFID re-read: READ_RFID SLOT=<n> on newer firmware, RFID_READ SLOT=slot<n> on older firmware (Plus 4 2.1.1 lists READ_RFID but ignores it)
  ('I.printerGcodeScript(`RFID_READ SLOT=slot${t}`)',
-  'I.printerGcodeScript(qbxHas(this,"READ_RFID")?`READ_RFID SLOT=${t}`:`RFID_READ SLOT=slot${t}`)', 1),
+  'I.printerGcodeScript(qbxHas(this,"READ_RFID")&&qbxNewFmt(this)?`READ_RFID SLOT=${t}`:`RFID_READ SLOT=slot${t}`)', 1),
  # Print start without used_extruders in the file metadata (e.g. a .3mf whose only plate is not plate 1):
  # Fluidd silently mapped every tool to the same-numbered slot (T0 -> slot0) and started the print without
  # showing the slot-mapping dialog. Show the dialog instead, using preset_colours/filament_type as tools.
